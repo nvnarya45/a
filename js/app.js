@@ -1,13 +1,7 @@
 // ===== Preloaded Avatar Options =====
 const AVATAR_OPTIONS = [
   // Emoji avatars
-  '👤', '👦', '👩', '🧑', '👦', '👧', '👨‍💻', '👩‍💻',
-  '🧑‍🎓', '👨‍🎓', '👩‍🎓', '🧑‍💼', '👨‍💼', '👩‍💼',
-  '🧑‍🔬', '👨‍🔬', '👩‍🔬', '🧑‍🎨', '👨‍🎨', '👩‍🎨',
-  '🧑‍🚀', '👨‍🚀', '👩‍🚀', '🧑‍⚕️', '👨‍⚕️', '👩‍⚕️',
-  '🦸', '🦸‍♂️', '🦸‍♀️', '🧙', '🧙‍♂️', '🧙‍♀️',
-  '🐱', '🐶', '🦊', '🐼', '🐨', '🦁',
-  '🌟', '🔥', '💎', '🎯', '🎭', '🌈'
+  '👤', '👨', '👩', '🧑', '👦', '👧', '👨‍💻', '👩‍💻',
 ];
 
 // ===== Calendar Engine =====
@@ -147,14 +141,22 @@ const CalendarEngine = {
   goToToday() {
     const t = new Date();
     const needsAnimation = (this.year !== t.getFullYear() || this.month !== t.getMonth());
-    this.year = t.getFullYear(); this.month = t.getMonth();
     
+    let direction = 'left';
+    if (this.year > t.getFullYear() || (this.year === t.getFullYear() && this.month > t.getMonth())) {
+      direction = 'right'; // we are in the future, returning to today means swiping back
+    }
+
     if (needsAnimation) {
-      this.animateSwipe('left', () => {
+      this.animateSwipe(direction, () => {
+        this.year = t.getFullYear(); 
+        this.month = t.getMonth();
         this.render();
         this.flashToday();
       });
     } else {
+      this.year = t.getFullYear(); 
+      this.month = t.getMonth();
       this.render();
       this.flashToday();
     }
@@ -169,8 +171,24 @@ const CalendarEngine = {
       }
     }, 350);
   },
-  jumpToMonth() { this.month = parseInt(document.getElementById('month-picker').value); this.render(); },
-  jumpToYear() { this.year = parseInt(document.getElementById('year-picker').value); this.render(); }
+  jumpToMonth() {
+    const targetMonth = parseInt(document.getElementById('month-picker').value);
+    if (targetMonth === this.month) return;
+    const direction = targetMonth > this.month ? 'left' : 'right';
+    this.animateSwipe(direction, () => {
+      this.month = targetMonth;
+      this.render();
+    });
+  },
+  jumpToYear() {
+    const targetYear = parseInt(document.getElementById('year-picker').value);
+    if (targetYear === this.year) return;
+    const direction = targetYear > this.year ? 'left' : 'right';
+    this.animateSwipe(direction, () => {
+      this.year = targetYear;
+      this.render();
+    });
+  }
 };
 
 // ===== UI Module =====
