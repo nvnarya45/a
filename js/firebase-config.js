@@ -1,12 +1,13 @@
 // Firebase Configuration
 // Replace with your Firebase project credentials
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBY0nqRGsqMMDFTENPoT3es5NQZpUTGRe0",
+  authDomain: "energy-meter-data-37caf.firebaseapp.com",
+  databaseURL: "https://energy-meter-data-37caf-default-rtdb.firebaseio.com",
+  projectId: "energy-meter-data-37caf",
+  storageBucket: "energy-meter-data-37caf.firebasestorage.app",
+  messagingSenderId: "525817374062",
+  appId: "1:525817374062:web:c815bdd169e60c1c98cd7f"
 };
 
 // Initialize Firebase
