@@ -2,7 +2,10 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
   <title>Holiday Calendar – Premium Glassmorphism</title>
   <meta name="description" content="A futuristic glassmorphism holiday calendar with Apple-inspired design">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -176,6 +179,19 @@
             <div class="panchang-card"><span class="panchang-label">☀️ Paksha</span><span id="p-paksha" class="panchang-value">Shukla</span></div>
             <div class="panchang-card"><span class="panchang-label">♈ Sun Sign</span><span id="p-sun" class="panchang-value">Aries</span></div>
             <div class="panchang-card"><span class="panchang-label">♋ Moon Sign</span><span id="p-moon" class="panchang-value">Cancer</span></div>
+          </div>
+        </div>
+        <!-- Inline Admin Section -->
+        <div id="inline-admin-section" class="admin-section hidden" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+          <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--text);">🛠️ Admin Modify Holiday</h4>
+          <div class="field-row"><label>Type</label>
+            <select id="inline-admin-type" class="glass-select-sm"><option value="GH">Gazetted (GH)</option><option value="RH">Restricted (RH)</option></select>
+          </div>
+          <div class="field-row"><label>Name</label><input type="text" id="inline-admin-name" class="glass-input-sm" placeholder="Holiday name"></div>
+          <div class="field-row"><label>Description</label><textarea id="inline-admin-desc" class="glass-textarea-sm" placeholder="Description"></textarea></div>
+          <div style="display:flex; gap:10px; margin-top: 10px;">
+            <button class="btn-primary btn-sm" style="flex:1;" onclick="AdminModule.saveInlineHoliday()">💾 Save</button>
+            <button class="btn-danger btn-sm" style="flex:1;" onclick="AdminModule.removeInlineHoliday()">🗑️ Remove</button>
           </div>
         </div>
         <!-- Notes -->
