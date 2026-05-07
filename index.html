@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Holiday Calendar – Premium Glassmorphism</title>
+  <meta name="description" content="A futuristic glassmorphism holiday calendar with Apple-inspired design">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Firebase SDKs (v9 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="dark-mode">
+
+  <!-- ===== ANIMATED BACKGROUND ===== -->
+  <div id="bg-layer" class="fixed inset-0 -z-10 overflow-hidden">
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+    <div class="bg-orb orb-4"></div>
+  </div>
+
+  <!-- ===== LOGIN SCREEN ===== -->
+  <div id="login-screen" class="screen active-screen">
+    <div class="login-container">
+      <div class="login-logo">
+        <div class="logo-icon">📅</div>
+        <h1>Holiday Calendar</h1>
+        <p class="login-subtitle">Premium Glassmorphism Experience</p>
+      </div>
+      <div class="glass-card login-card">
+        <!-- Auth Mode Tabs: Login / Register -->
+        <div class="login-tabs">
+          <button class="tab-btn active" data-tab="login" id="tab-login">🔑 Login</button>
+          <button class="tab-btn" data-tab="register" id="tab-register">📝 Register</button>
+        </div>
+
+        <!-- LOGIN TAB -->
+        <div id="login-tab" class="tab-content active">
+          <label class="input-label">Email Address</label>
+          <input type="email" id="login-email" placeholder="you@email.com" class="glass-input full">
+          <label class="input-label">Password</label>
+          <input type="password" id="login-password" placeholder="Enter password" class="glass-input full">
+          <button class="btn-primary" onclick="AuthModule.loginWithEmail()">🔑 Login</button>
+          <button class="btn-link" onclick="AuthModule.showForgotPassword()">Forgot Password?</button>
+        </div>
+
+        <!-- REGISTER TAB -->
+        <div id="register-tab" class="tab-content">
+          <label class="input-label">Full Name</label>
+          <input type="text" id="register-name" placeholder="Your full name" class="glass-input full">
+          <label class="input-label">Email Address</label>
+          <input type="email" id="register-email" placeholder="you@email.com" class="glass-input full">
+          <label class="input-label">Password (min 6 characters)</label>
+          <input type="password" id="register-password" placeholder="Create password" class="glass-input full">
+          <label class="input-label">Confirm Password</label>
+          <input type="password" id="register-confirm" placeholder="Confirm password" class="glass-input full">
+          <button class="btn-primary" onclick="AuthModule.registerWithEmail()">📝 Create Account</button>
+        </div>
+
+        <!-- FORGOT PASSWORD (hidden by default) -->
+        <div id="forgot-tab" class="tab-content">
+          <label class="input-label">Enter your email to reset password</label>
+          <input type="email" id="forgot-email" placeholder="you@email.com" class="glass-input full">
+          <button class="btn-primary" onclick="AuthModule.sendPasswordReset()">📧 Send Reset Link</button>
+          <button class="btn-link" onclick="AuthModule.showLogin()">← Back to Login</button>
+        </div>
+
+        <!-- VERIFY EMAIL (hidden by default) -->
+        <div id="verify-tab" class="tab-content">
+          <div class="verify-email-box">
+            <div class="verify-icon">📧</div>
+            <h3 class="verify-title">Verify Your Email</h3>
+            <p class="verify-desc">We've sent a verification link to your email. Please verify before logging in.</p>
+            <button class="btn-primary" onclick="AuthModule.checkVerification()">✅ I've Verified</button>
+            <button class="btn-link" onclick="AuthModule.resendVerification()">Resend Verification Email</button>
+            <button class="btn-link" onclick="AuthModule.showLogin()">← Back to Login</button>
+          </div>
+        </div>
+
+        <div id="login-error" class="error-msg hidden"></div>
+        <div id="login-success" class="success-msg hidden"></div>
+      </div>
+      <p class="login-footer-text">Designed with ❤️ • Premium Calendar</p>
+    </div>
+  </div>
+
+  <!-- ===== MAIN APP ===== -->
+  <div id="app-screen" class="screen">
+    <!-- Header -->
+    <header id="app-header" class="glass-header">
+      <button id="menu-btn" class="icon-btn" onclick="UI.toggleSidebar()">
+        <span class="hamburger"><span></span><span></span><span></span></span>
+      </button>
+      <div class="header-title">
+        <h2 id="header-month-year">May 2026</h2>
+      </div>
+      <button class="icon-btn" onclick="CalendarEngine.goToToday()">
+        <span class="today-badge">Today</span>
+      </button>
+    </header>
+
+    <!-- Calendar Navigation -->
+    <div class="calendar-nav glass-card-sm">
+      <button class="nav-btn" onclick="CalendarEngine.prevMonth()">‹</button>
+      <div class="nav-selectors">
+        <select id="month-picker" class="glass-select" onchange="CalendarEngine.jumpToMonth()"></select>
+        <select id="year-picker" class="glass-select" onchange="CalendarEngine.jumpToYear()"></select>
+      </div>
+      <button class="nav-btn" onclick="CalendarEngine.nextMonth()">›</button>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div id="calendar-container" class="calendar-wrapper">
+      <div class="day-headers" id="day-headers"></div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+
+    <!-- Holiday Legend -->
+    <div class="legend glass-card-sm">
+      <span class="legend-item"><span class="legend-dot gh"></span>Gazetted</span>
+      <span class="legend-item"><span class="legend-dot rh"></span>Restricted</span>
+      <span class="legend-item"><span class="legend-dot weekend"></span>Weekend</span>
+      <span class="legend-item"><span class="legend-dot today-dot"></span>Today</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer glass-card-sm">
+      <p>Designed by <button class="footer-link" onclick="UI.openModal('profile-modal')">Premium Dev</button> • v2.0</p>
+    </footer>
+  </div>
+
+  <!-- ===== SIDEBAR DRAWER ===== -->
+  <div id="sidebar-overlay" class="sidebar-overlay" onclick="UI.toggleSidebar()"></div>
+  <aside id="sidebar" class="sidebar glass-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-avatar" onclick="UI.openModal('profile-modal')">
+        <div class="avatar-ring"><div class="avatar-inner" id="sidebar-avatar-img">👤</div></div>
+      </div>
+      <h3 id="sidebar-username">User</h3>
+      <p id="sidebar-email" class="sidebar-email">user@email.com</p>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-item" onclick="UI.openModal('profile-modal')"><span>👤</span>Profile</button>
+      <button class="sidebar-item" onclick="UI.openModal('settings-modal')"><span>⚙️</span>Settings</button>
+      <button class="sidebar-item" onclick="UI.openModal('holiday-list-modal')"><span>📋</span>Holiday List</button>
+      <button class="sidebar-item" onclick="UI.openModal('about-modal')"><span>ℹ️</span>About</button>
+      <button class="sidebar-item" onclick="ThemeEngine.toggle()"><span>🌓</span>Toggle Theme</button>
+      <hr class="sidebar-divider">
+      <button class="sidebar-item danger" onclick="AuthModule.logout()"><span>🚪</span>Logout</button>
+    </nav>
+  </aside>
+
+  <!-- ===== MODALS ===== -->
+
+  <!-- Holiday Detail Modal -->
+  <div id="detail-modal" class="modal-overlay" onclick="UI.closeModalOnBg(event,'detail-modal')">
+    <div class="modal glass-modal modal-zoom">
+      <button class="modal-close" onclick="UI.closeModal('detail-modal')">✕</button>
+      <div id="detail-content">
+        <div class="detail-date-badge" id="detail-date"></div>
+        <h2 id="detail-title" class="detail-title">Holiday</h2>
+        <span id="detail-type-badge" class="type-badge">GH</span>
+        <p id="detail-desc" class="detail-desc"></p>
+        <!-- Panchang Section -->
+        <div id="panchang-section" class="panchang-section">
+          <h4 class="panchang-title">🕉️ Panchang</h4>
+          <div class="panchang-grid">
+            <div class="panchang-card"><span class="panchang-label">🌅 Sunrise</span><span id="p-sunrise" class="panchang-value">6:05 AM</span></div>
+            <div class="panchang-card"><span class="panchang-label">🌇 Sunset</span><span id="p-sunset" class="panchang-value">6:45 PM</span></div>
+            <div class="panchang-card"><span class="panchang-label">🌙 Tithi</span><span id="p-tithi" class="panchang-value">Dashami</span></div>
+            <div class="panchang-card"><span class="panchang-label">☀️ Paksha</span><span id="p-paksha" class="panchang-value">Shukla</span></div>
+            <div class="panchang-card"><span class="panchang-label">♈ Sun Sign</span><span id="p-sun" class="panchang-value">Aries</span></div>
+            <div class="panchang-card"><span class="panchang-label">♋ Moon Sign</span><span id="p-moon" class="panchang-value">Cancer</span></div>
+          </div>
+        </div>
+        <!-- Notes -->
+        <div class="notes-section">
+          <h4>📝 Notes</h4>
+          <textarea id="note-textarea" class="glass-textarea" placeholder="Add your private note..."></textarea>
+          <button class="btn-primary btn-sm" onclick="NotesModule.saveNote()">💾 Save Note</button>
+          <div id="note-status" class="hidden"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal-overlay" onclick="UI.closeModalOnBg(event,'settings-modal')">
+    <div class="modal glass-modal modal-slide-right">
+      <button class="modal-close" onclick="UI.closeModal('settings-modal')">✕</button>
+      <h2 class="modal-title">⚙️ Settings</h2>
+      <div class="settings-list">
+        <!-- Profile Section -->
+        <div class="settings-group">
+          <h4 class="settings-group-title">Profile</h4>
+          <div class="profile-edit-card glass-card-sm">
+            <div class="profile-dp-edit">
+              <div class="dp-circle" id="settings-dp">👤</div>
+              <button class="btn-sm btn-outline" onclick="UI.openModal('avatar-modal')">Change Picture</button>
+            </div>
+            <div class="profile-fields">
+              <div class="field-row"><label>Name</label><input type="text" id="profile-name" class="glass-input-sm" placeholder="Your name"></div>
+              <div class="field-row"><label>Email</label><input type="email" id="profile-email" class="glass-input-sm" placeholder="Email" disabled></div>
+              <div class="field-row"><label>Mobile</label><input type="tel" id="profile-mobile" class="glass-input-sm" placeholder="Mobile"></div>
+              <div class="field-row"><label>Gender</label>
+                <select id="profile-gender" class="glass-select-sm"><option>Male</option><option>Female</option><option>Other</option></select>
+              </div>
+              <div class="field-row"><label>State</label><input type="text" id="profile-state" class="glass-input-sm" placeholder="State"></div>
+            </div>
+            <button class="btn-primary btn-sm" onclick="SettingsModule.saveProfile()">Save Profile</button>
+          </div>
+        </div>
+        <!-- Theme -->
+        <div class="settings-group">
+          <h4 class="settings-group-title">Theme</h4>
+          <div class="theme-options">
+            <button class="theme-btn" data-theme="system" onclick="ThemeEngine.set('system')">🖥️ System</button>
+            <button class="theme-btn" data-theme="light" onclick="ThemeEngine.set('light')">☀️ Light</button>
+            <button class="theme-btn" data-theme="dark" onclick="ThemeEngine.set('dark')">🌙 Dark</button>
+          </div>
+        </div>
+        <!-- Calendar Settings -->
+        <div class="settings-group">
+          <h4 class="settings-group-title">Calendar</h4>
+          <div class="setting-row">
+            <span>Calendar Mode</span>
+            <div class="seg-control">
+              <button class="seg-btn active" onclick="SettingsModule.setCalMode('regular')">Regular</button>
+              <button class="seg-btn" onclick="SettingsModule.setCalMode('compact')">Compact</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span>Week Starts On</span>
+            <div class="seg-control">
+              <button class="seg-btn active" data-start="0" onclick="SettingsModule.setWeekStart(0)">Sunday</button>
+              <button class="seg-btn" data-start="1" onclick="SettingsModule.setWeekStart(1)">Monday</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span>Show Panchang</span>
+            <label class="ios-switch"><input type="checkbox" id="toggle-panchang" checked onchange="SettingsModule.togglePanchang()"><span class="switch-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <span>Weekend Highlight</span>
+            <label class="ios-switch"><input type="checkbox" id="toggle-weekends" checked onchange="SettingsModule.toggleWeekends()"><span class="switch-slider"></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Avatar Picker Modal -->
+  <div id="avatar-modal" class="modal-overlay" onclick="UI.closeModalOnBg(event,'avatar-modal')">
+    <div class="modal glass-modal modal-zoom">
+      <button class="modal-close" onclick="UI.closeModal('avatar-modal')">✕</button>
+      <h2 class="modal-title">🖼️ Choose Profile Picture</h2>
+      <div class="avatar-grid" id="avatar-grid">
+        <!-- Avatars will be injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div id="about-modal" class="modal-overlay" onclick="UI.closeModalOnBg(event,'about-modal')">
+    <div class="modal glass-modal modal-zoom">
+      <button class="modal-close" onclick="UI.closeModal('about-modal')">✕</button>
+      <div class="about-content">
+        <div class="about-logo">📅</div>
+        <h2>Holiday Calendar</h2>
+        <p class="about-version">Version 2.0 • Premium Edition</p>
+        <div class="about-features glass-card-sm">
+          <h4>Features</h4>
+          <ul>
+            <li>🗓️ Interactive Calendar with Holiday Tracking</li>
+            <li>🎨 Glassmorphism UI with Dark/Light Themes</li>
+            <li>🕉️ Panchang & Astro Info</li>
+            <li>📝 Firebase Cloud Notes</li>
+            <li>📱 Mobile-first Responsive Design</li>
+            <li>🔐 Firebase Email Authentication</li>
+          </ul>
+        </div>
+        <p class="about-designer">Designed with ❤️ by Premium Dev</p>
+        <div class="social-buttons">
+          <a href="#" class="social-btn">🐦</a>
+          <a href="#" class="social-btn">📷</a>
+          <a href="#" class="social-btn">💼</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div id="profile-modal" class="modal-overlay" onclick="UI.closeModalOnBg(event,'profile-modal')">
+    <div class="modal glass-modal modal-zoom">
+      <button class="modal-close" onclick="UI.closeModal('profile-modal')">✕</button>
+      <div class="profile-content">
+        <div class="profile-avatar-lg">
+          <div class="avatar-glow"><div class="avatar-inner-lg" id="profile-avatar-img">👤</div></div>
+        </div>
+        <h2 id="profile-display-name">User</h2>
+        <p id="profile-display-email" class="profile-subtitle">user@email.com</p>
+        <div class="profile-info-cards">
+          <div class="info-card glass-card-sm"><span>📱</span><span id="profile-display-mobile">—</span></div>
+          <div class="info-card glass-card-sm"><span>🏷️</span><span id="profile-display-gender">—</span></div>
+          <div class="info-card glass-card-sm"><span>📍</span><span id="profile-display-state">—</span></div>
+        </div>
+        <div class="social-buttons">
+          <a href="#" class="social-btn">🐦</a>
+          <a href="#" class="social-btn">📷</a>
+          <a href="#" class="social-btn">💼</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Holiday List Modal -->
+  <div id="holiday-list-modal" class="modal-overlay" onclick="UI.closeModalOnBg(event,'holiday-list-modal')">
+    <div class="modal glass-modal modal-slide-right large-modal">
+      <button class="modal-close" onclick="UI.closeModal('holiday-list-modal')">✕</button>
+      <h2 class="modal-title">📋 Holiday List</h2>
+      <div class="holiday-list-tabs">
+        <button class="hl-tab active" onclick="UI.filterHolidayList('all')">All</button>
+        <button class="hl-tab" onclick="UI.filterHolidayList('GH')">Gazetted</button>
+        <button class="hl-tab" onclick="UI.filterHolidayList('RH')">Restricted</button>
+      </div>
+      <div id="holiday-full-list" class="holiday-full-list"></div>
+    </div>
+  </div>
+
+  <!-- Admin Modal (hidden, only for admin email) -->
+  <div id="admin-modal" class="modal-overlay" onclick="UI.closeModalOnBg(event,'admin-modal')">
+    <div class="modal glass-modal modal-zoom large-modal">
+      <button class="modal-close" onclick="UI.closeModal('admin-modal')">✕</button>
+      <h2 class="modal-title">🔒 Admin Panel</h2>
+      <div class="admin-form">
+        <div class="field-row"><label>Date</label><input type="date" id="admin-date" class="glass-input-sm"></div>
+        <div class="field-row"><label>Holiday Type</label>
+          <select id="admin-type" class="glass-select-sm"><option value="GH">Gazetted (GH)</option><option value="RH">Restricted (RH)</option></select>
+        </div>
+        <div class="field-row"><label>Event Name</label><input type="text" id="admin-name" class="glass-input-sm" placeholder="Holiday name"></div>
+        <div class="field-row"><label>Description</label><textarea id="admin-desc" class="glass-textarea-sm" placeholder="Description"></textarea></div>
+        <button class="btn-primary" onclick="AdminModule.saveHoliday()">💾 Save Holiday</button>
+        <button class="btn-danger" onclick="AdminModule.removeHoliday()">🗑️ Remove Holiday</button>
+        <div id="admin-status" class="hidden"></div>
+      </div>
+      <h3 class="modal-subtitle">Current Holidays</h3>
+      <div id="admin-holiday-list" class="admin-holiday-list"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden"><span id="toast-msg"></span></div>
+
+  <!-- Scripts -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
