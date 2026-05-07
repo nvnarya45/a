@@ -2,6 +2,12 @@
 const AVATAR_OPTIONS = [
   // Emoji avatars
   '👤', '👨', '👩', '🧑', '👦', '👧', '👨‍💻', '👩‍💻',
+  '🧑‍🎓', '👨‍🎓', '👩‍🎓', '🧑‍💼', '👨‍💼', '👩‍💼',
+  '🧑‍🔬', '👨‍🔬', '👩‍🔬', '🧑‍🎨', '👨‍🎨', '👩‍🎨',
+  '🧑‍🚀', '👨‍🚀', '👩‍🚀', '🧑‍⚕️', '👨‍⚕️', '👩‍⚕️',
+  '🦸', '🦸‍♂️', '🦸‍♀️', '🧙', '🧙‍♂️', '🧙‍♀️',
+  '🐱', '🐶', '🦊', '🐼', '🐨', '🦁',
+  '🌟', '🔥', '💎', '🎯', '🎭', '🌈'
 ];
 
 // ===== Calendar Engine =====
@@ -95,13 +101,17 @@ const CalendarEngine = {
       const isToday = dateStr === todayStr;
       const isWeekend = dow === 0 || dow === 6;
       const holiday = HolidayData.getHoliday(dateStr);
+      const bdays = typeof BirthdayModule !== 'undefined' ? BirthdayModule.getBirthdaysForDate(this.month, d) : [];
       let cls = 'cal-cell';
       if (isToday) cls += ' today';
       else if (holiday) cls += holiday.type === 'GH' ? ' gh' : ' rh';
+      else if (bdays.length > 0) cls += ' gh'; // Make it pop like a holiday
       else if (isWeekend && this.showWeekends) cls += ' weekend-cell';
 
       let inner = `<span class="day-num">${d}</span>`;
-      if (holiday) {
+      if (bdays.length > 0) {
+        inner += `<span class="holiday-label" style="color:var(--today-glow)">🎂 ${bdays[0].name}'s Bday</span>`;
+      } else if (holiday) {
         inner += `<span class="holiday-label">${holiday.name}</span>`;
         inner += `<span class="type-dot">${holiday.type}</span>`;
       }
@@ -444,6 +454,113 @@ const AdminModule = {
   }
 };
 
+// ===== Birthday Module =====
+const BirthdayModule = {
+  birthdays: [],
+
+  init() {
+    this.birthdays = JSON.parse(localStorage.getItem('hc_birthdays') || '[]');
+    this.renderList();
+    this.checkToday();
+  },
+
+  addBirthday() {
+    const name = document.getElementById('bday-name').value.trim();
+    const date = document.getElementById('bday-date').value;
+    const relation = document.getElementById('bday-relation').value;
+    if (!name || !date) { UI.toast('Fill name and date'); return; }
+    
+    this.birthdays.push({ id: Date.now().toString(), name, date, relation });
+    this.save();
+    this.renderList();
+    if (typeof CalendarEngine !== 'undefined') CalendarEngine.render();
+    UI.toast('Birthday added!');
+    
+    document.getElementById('bday-name').value = '';
+    document.getElementById('bday-date').value = '';
+    
+    this.checkToday();
+  },
+
+  removeBirthday(id) {
+    this.birthdays = this.birthdays.filter(b => b.id !== id);
+    this.save();
+    this.renderList();
+    if (typeof CalendarEngine !== 'undefined') CalendarEngine.render();
+  },
+
+  save() {
+    localStorage.setItem('hc_birthdays', JSON.stringify(this.birthdays));
+  },
+
+  getBirthdaysForDate(month, day) {
+    return this.birthdays.filter(b => {
+      const d = new Date(b.date);
+      return d.getMonth() === month && d.getDate() === day;
+    });
+  },
+
+  renderList() {
+    const list = document.getElementById('birthday-list');
+    if (!list) return;
+    if (this.birthdays.length === 0) {
+      list.innerHTML = '<p style="color:var(--text-sec)">No birthdays added.</p>';
+      return;
+    }
+    
+    const today = new Date();
+    const tMonth = today.getMonth();
+    const tDate = today.getDate();
+    
+    const sorted = [...this.birthdays].sort((a, b) => {
+      const ad = new Date(a.date);
+      const bd = new Date(b.date);
+      const aMonth = ad.getMonth(), aDay = ad.getDate();
+      const bMonth = bd.getMonth(), bDay = bd.getDate();
+      
+      const aScore = (aMonth < tMonth || (aMonth === tMonth && aDay < tDate)) ? aMonth + 12 : aMonth;
+      const bScore = (bMonth < tMonth || (bMonth === tMonth && bDay < tDate)) ? bMonth + 12 : bMonth;
+      
+      if (aScore !== bScore) return aScore - bScore;
+      return aDay - bDay;
+    });
+
+    list.innerHTML = sorted.map(b => {
+      const d = new Date(b.date);
+      const dStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return `<div class="hl-card">
+        <span class="hl-card-date" style="color:var(--today-glow)">${dStr}</span>
+        <span class="hl-card-name">${b.name} <small style="color:var(--text-sec)">(${b.relation})</small></span>
+        <button class="btn-danger btn-sm" style="padding:4px 8px; width:auto; margin:0;" onclick="BirthdayModule.removeBirthday('${b.id}')">✕</button>
+      </div>`;
+    }).join('');
+  },
+
+  checkToday() {
+    const today = new Date();
+    const tMonth = today.getMonth();
+    const tDate = today.getDate();
+    
+    const lastCelebrated = localStorage.getItem('hc_bday_celebrated');
+    const todayStr = `${today.getFullYear()}-${tMonth}-${tDate}`;
+    
+    const todaysBdays = this.getBirthdaysForDate(tMonth, tDate);
+    
+    if (todaysBdays.length > 0 && lastCelebrated !== todayStr) {
+      const names = todaysBdays.map(b => b.name).join(' & ');
+      const rels = todaysBdays.map(b => b.relation).join(' & ');
+      
+      document.getElementById('bday-celebration-name').textContent = names;
+      document.getElementById('bday-celebration-rel').textContent = rels;
+      
+      setTimeout(() => {
+        document.getElementById('birthday-celebration').classList.add('open');
+        localStorage.setItem('hc_bday_celebrated', todayStr);
+      }, 1000);
+    }
+  }
+};
+
 // ===== Main App =====
 const AppMain = {
   adminTapCount: 0,
@@ -452,6 +569,7 @@ const AppMain = {
   init() {
     ThemeEngine.init();
     SettingsModule.init();
+    BirthdayModule.init();
     CalendarEngine.init();
     UI.filterHolidayList('all');
     AdminModule.renderList();
@@ -492,9 +610,20 @@ const AppMain = {
     const holiday = HolidayData.getHoliday(dateStr);
     const dayLabel = dt.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
+    const bdays = typeof BirthdayModule !== 'undefined' ? BirthdayModule.getBirthdaysForDate(dt.getMonth(), dt.getDate()) : [];
+
+    let titleText = holiday ? holiday.name : 'Regular Day';
+    let descText = holiday ? holiday.desc : 'No holiday on this date.';
+
+    if (bdays.length > 0) {
+      const bNames = bdays.map(b => b.name).join(' & ');
+      titleText = `🎂 ${bNames}'s Birthday!`;
+      descText = `Wish ${bNames} a very happy birthday today!`;
+    }
+
     document.getElementById('detail-date').textContent = dayLabel;
-    document.getElementById('detail-title').textContent = holiday ? holiday.name : 'Regular Day';
-    document.getElementById('detail-desc').textContent = holiday ? holiday.desc : 'No holiday on this date.';
+    document.getElementById('detail-title').textContent = titleText;
+    document.getElementById('detail-desc').textContent = descText;
 
     const badge = document.getElementById('detail-type-badge');
     if (holiday) {
