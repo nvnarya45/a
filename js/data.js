@@ -14,8 +14,7 @@ const HolidayData = {
     "2026-04-10": { name: "Mahavir Jayanti", type: "GH", desc: "Birth of Lord Mahavira" },
     "2026-04-14": { name: "Dr Ambedkar Jayanti", type: "GH", desc: "Birth of Dr B.R. Ambedkar" },
     "2026-04-15": { name: "Vaisakhi", type: "RH", desc: "Sikh New Year" },
-    "2026-05-01": { name: "May Day", type: "RH", desc: "International Workers' Day" },
-    "2026-05-24": { name: "Buddha Purnima", type: "GH", desc: "Birth of Gautama Buddha" },
+    "2026-05-01": { name: "Buddha Purnima", type: "GH", desc: "Birth of Gautama Buddha" },
     "2026-06-07": { name: "Id-ul-Zuha (Bakrid)", type: "GH", desc: "Festival of Sacrifice" },
     "2026-07-07": { name: "Muharram", type: "GH", desc: "Islamic New Year" },
     "2026-08-15": { name: "Independence Day", type: "GH", desc: "India's Independence from British rule" },
@@ -77,23 +76,74 @@ const HolidayData = {
   },
 
   addHoliday(dateStr, name, type, desc) {
-    this.holidays[dateStr] = { name, type, desc };
-    this.saveCustom();
+    const data = { name, type, desc };
+    this.holidays[dateStr] = data;
+    this.saveCustomLocal();
+    try {
+      if (typeof db !== 'undefined') db.collection('holidays').doc(dateStr).set(data);
+    } catch(e) {}
   },
 
   removeHoliday(dateStr) {
     delete this.holidays[dateStr];
-    this.saveCustom();
+    this.saveCustomLocal();
+    try {
+      if (typeof db !== 'undefined') db.collection('holidays').doc(dateStr).set({ deleted: true });
+    } catch(e) {}
   },
 
-  saveCustom() {
+  saveCustomLocal() {
     try { localStorage.setItem('custom_holidays', JSON.stringify(this.holidays)); } catch(e) {}
   },
 
   loadCustom() {
     try {
       const saved = localStorage.getItem('custom_holidays');
-      if (saved) this.holidays = { ...this.holidays, ...JSON.parse(saved) };
+      if (saved) {
+        this.holidays = { ...this.holidays, ...JSON.parse(saved) };
+      }
+    } catch(e) {}
+
+    try {
+      if (typeof db !== 'undefined') {
+        db.collection('holidays').onSnapshot((snapshot) => {
+          let updated = false;
+          snapshot.docChanges().forEach((change) => {
+            const data = change.doc.data();
+            const dateStr = change.doc.id;
+            
+            if (change.type === "added" || change.type === "modified") {
+              if (data.deleted) {
+                if (this.holidays[dateStr]) {
+                  delete this.holidays[dateStr];
+                  updated = true;
+                }
+              } else {
+                this.holidays[dateStr] = data;
+                updated = true;
+              }
+            }
+            if (change.type === "removed") {
+              if (this.holidays[dateStr]) {
+                delete this.holidays[dateStr];
+                updated = true;
+              }
+            }
+          });
+          if (updated) {
+            this.saveCustomLocal();
+            if (typeof CalendarEngine !== 'undefined') CalendarEngine.render();
+            if (typeof AdminModule !== 'undefined') AdminModule.renderList();
+            if (typeof UI !== 'undefined' && UI.filterHolidayList) {
+              const activeTab = document.querySelector('.hl-tab.active');
+              const filterType = activeTab ? (activeTab.textContent.includes('All') ? 'all' : (activeTab.textContent.includes('GH') ? 'GH' : 'RH')) : 'all';
+              UI.filterHolidayList(filterType);
+            }
+          }
+        }, (error) => {
+          console.log('Error listening to holidays:', error);
+        });
+      }
     } catch(e) {}
   }
 };
