@@ -151,6 +151,7 @@
       <button class="sidebar-item" onclick="UI.openModal('profile-modal')"><span>👤</span>Profile</button>
       <button class="sidebar-item" onclick="UI.openModal('settings-modal')"><span>⚙️</span>Settings</button>
       <button class="sidebar-item" onclick="UI.openModal('holiday-list-modal')"><span>📋</span>Holiday List</button>
+      <button class="sidebar-item" onclick="UI.openModal('birthday-modal')"><span>🎂</span>Birthdays</button>
       <button class="sidebar-item" onclick="UI.openModal('about-modal')"><span>ℹ️</span>About</button>
       <button class="sidebar-item" onclick="ThemeEngine.toggle()"><span>🌓</span>Toggle Theme</button>
       <hr class="sidebar-divider">
@@ -211,26 +212,6 @@
       <button class="modal-close" onclick="UI.closeModal('settings-modal')">✕</button>
       <h2 class="modal-title">⚙️ Settings</h2>
       <div class="settings-list">
-        <!-- Profile Section -->
-        <div class="settings-group">
-          <h4 class="settings-group-title">Profile</h4>
-          <div class="profile-edit-card glass-card-sm">
-            <div class="profile-dp-edit">
-              <div class="dp-circle" id="settings-dp">👤</div>
-              <button class="btn-sm btn-outline" onclick="UI.openModal('avatar-modal')">Change Picture</button>
-            </div>
-            <div class="profile-fields">
-              <div class="field-row"><label>Name</label><input type="text" id="profile-name" class="glass-input-sm" placeholder="Your name"></div>
-              <div class="field-row"><label>Email</label><input type="email" id="profile-email" class="glass-input-sm" placeholder="Email" disabled></div>
-              <div class="field-row"><label>Mobile</label><input type="tel" id="profile-mobile" class="glass-input-sm" placeholder="Mobile"></div>
-              <div class="field-row"><label>Gender</label>
-                <select id="profile-gender" class="glass-select-sm"><option>Male</option><option>Female</option><option>Other</option></select>
-              </div>
-              <div class="field-row"><label>State</label><input type="text" id="profile-state" class="glass-input-sm" placeholder="State"></div>
-            </div>
-            <button class="btn-primary btn-sm" onclick="SettingsModule.saveProfile()">Save Profile</button>
-          </div>
-        </div>
         <!-- Theme -->
         <div class="settings-group">
           <h4 class="settings-group-title">Theme</h4>
@@ -325,7 +306,26 @@
           <div class="info-card glass-card-sm"><span>🏷️</span><span id="profile-display-gender">—</span></div>
           <div class="info-card glass-card-sm"><span>📍</span><span id="profile-display-state">—</span></div>
         </div>
-        <div class="social-buttons">
+        <button class="btn-outline btn-sm" style="margin-top: 15px;" onclick="document.getElementById('profile-edit-section').classList.toggle('hidden')">✏️ Edit Profile</button>
+        <div id="profile-edit-section" class="hidden" style="margin-top: 20px; text-align: left;">
+          <div class="profile-edit-card glass-card-sm">
+            <div class="profile-dp-edit">
+              <div class="dp-circle" id="settings-dp">👤</div>
+              <button class="btn-sm btn-outline" onclick="UI.openModal('avatar-modal')">Change Picture</button>
+            </div>
+            <div class="profile-fields">
+              <div class="field-row"><label>Name</label><input type="text" id="profile-name" class="glass-input-sm" placeholder="Your name"></div>
+              <div class="field-row"><label>Email</label><input type="email" id="profile-email" class="glass-input-sm" placeholder="Email" disabled></div>
+              <div class="field-row"><label>Mobile</label><input type="tel" id="profile-mobile" class="glass-input-sm" placeholder="Mobile"></div>
+              <div class="field-row"><label>Gender</label>
+                <select id="profile-gender" class="glass-select-sm"><option>Male</option><option>Female</option><option>Other</option></select>
+              </div>
+              <div class="field-row"><label>State</label><input type="text" id="profile-state" class="glass-input-sm" placeholder="State"></div>
+            </div>
+            <button class="btn-primary btn-sm" onclick="SettingsModule.saveProfile(); document.getElementById('profile-edit-section').classList.add('hidden');">💾 Save Profile</button>
+          </div>
+        </div>
+        <div class="social-buttons" style="margin-top: 20px;">
           <a href="#" class="social-btn">🐦</a>
           <a href="#" class="social-btn">📷</a>
           <a href="#" class="social-btn">💼</a>
@@ -366,6 +366,39 @@
       </div>
       <h3 class="modal-subtitle">Current Holidays</h3>
       <div id="admin-holiday-list" class="admin-holiday-list"></div>
+    </div>
+  </div>
+
+  <!-- Birthday Modal -->
+  <div id="birthday-modal" class="modal-overlay" onclick="UI.closeModalOnBg(event,'birthday-modal')">
+    <div class="modal glass-modal modal-slide-right">
+      <button class="modal-close" onclick="UI.closeModal('birthday-modal')">✕</button>
+      <h2 class="modal-title">🎂 Birthdays</h2>
+      <div class="admin-form">
+        <div class="field-row"><label>Name</label><input type="text" id="bday-name" class="glass-input-sm" placeholder="Name"></div>
+        <div class="field-row"><label>Date</label><input type="date" id="bday-date" class="glass-input-sm"></div>
+        <div class="field-row"><label>Relation</label>
+          <select id="bday-relation" class="glass-select-sm">
+            <option value="Self">Self</option>
+            <option value="Friend">Friend</option>
+            <option value="Relative">Relative</option>
+          </select>
+        </div>
+        <button class="btn-primary btn-sm" onclick="BirthdayModule.addBirthday()">➕ Add Birthday</button>
+      </div>
+      <h3 class="modal-subtitle" style="margin-top: 20px;">Upcoming Birthdays</h3>
+      <div id="birthday-list" class="holiday-full-list"></div>
+    </div>
+  </div>
+
+  <!-- Birthday Celebration Overlay -->
+  <div id="birthday-celebration" class="modal-overlay" style="z-index: 1000; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);" onclick="this.classList.remove('open')">
+    <div class="modal glass-modal modal-zoom" style="text-align: center; border-color: var(--today-glow); box-shadow: 0 0 50px rgba(236,72,152,0.5);">
+      <div style="font-size: 4rem; animation: pulse 1.5s infinite;">🎉</div>
+      <h1 style="font-size: 2rem; margin: 10px 0; background: linear-gradient(135deg, var(--accent), var(--today-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Happy Birthday!</h1>
+      <h2 id="bday-celebration-name" style="font-size: 1.5rem; font-weight: 800; margin-bottom: 5px;">Name</h2>
+      <p id="bday-celebration-rel" style="color: var(--text-sec); font-size: 1rem; margin-bottom: 20px;">Friend</p>
+      <button class="btn-primary" onclick="document.getElementById('birthday-celebration').classList.remove('open')">Thank You!</button>
     </div>
   </div>
 
