@@ -1,7 +1,7 @@
 // ===== Preloaded Avatar Options =====
 const AVATAR_OPTIONS = [
   // Emoji avatars
-  '👤', '👨', '👩', '🧑', '👦', '👧', '👨‍💻', '👩‍💻',
+  '👤', '👦', '👩', '🧑', '👦', '👧', '👨‍💻', '👩‍💻',
   '🧑‍🎓', '👨‍🎓', '👩‍🎓', '🧑‍💼', '👨‍💼', '👩‍💼',
   '🧑‍🔬', '👨‍🔬', '👩‍🔬', '🧑‍🎨', '👨‍🎨', '👩‍🎨',
   '🧑‍🚀', '👨‍🚀', '👩‍🚀', '🧑‍⚕️', '👨‍⚕️', '👩‍⚕️',
@@ -398,12 +398,38 @@ const AdminModule = {
     const list = document.getElementById('admin-holiday-list');
     const all = HolidayData.getAllHolidays();
     list.innerHTML = all.map(h => `<div class="hl-card"><span class="hl-card-date">${h.date}</span><span class="hl-card-name">${h.name}</span><span class="hl-card-type" style="background:${h.type==='GH'?'var(--gh)':'var(--rh)'}">${h.type}</span></div>`).join('');
+  },
+
+  saveInlineHoliday() {
+    if (!AuthModule.isAdmin) return;
+    const date = AppMain.currentDate;
+    const type = document.getElementById('inline-admin-type').value;
+    const name = document.getElementById('inline-admin-name').value.trim();
+    const desc = document.getElementById('inline-admin-desc').value.trim();
+    if (!date || !name) { UI.toast('Fill name'); return; }
+    HolidayData.addHoliday(date, name, type, desc);
+    CalendarEngine.render();
+    this.renderList();
+    UI.toast('Holiday saved!');
+    AppMain.openDetail(date); // Refresh view
+  },
+
+  removeInlineHoliday() {
+    if (!AuthModule.isAdmin) return;
+    const date = AppMain.currentDate;
+    if (!date) return;
+    HolidayData.removeHoliday(date);
+    CalendarEngine.render();
+    this.renderList();
+    UI.toast('Holiday removed');
+    AppMain.openDetail(date); // Refresh view
   }
 };
 
 // ===== Main App =====
 const AppMain = {
   adminTapCount: 0,
+  currentDate: null,
 
   init() {
     ThemeEngine.init();
@@ -443,6 +469,7 @@ const AppMain = {
   },
 
   openDetail(dateStr) {
+    this.currentDate = dateStr;
     const dt = new Date(dateStr + 'T00:00:00');
     const holiday = HolidayData.getHoliday(dateStr);
     const dayLabel = dt.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -472,6 +499,23 @@ const AppMain = {
       document.getElementById('p-paksha').textContent = p.paksha;
       document.getElementById('p-sun').textContent = p.sunSign;
       document.getElementById('p-moon').textContent = p.moonSign;
+    }
+
+    // Inline Admin
+    const inlineAdmin = document.getElementById('inline-admin-section');
+    if (AuthModule && AuthModule.isAdmin) {
+      inlineAdmin.classList.remove('hidden');
+      if (holiday) {
+        document.getElementById('inline-admin-type').value = holiday.type;
+        document.getElementById('inline-admin-name').value = holiday.name;
+        document.getElementById('inline-admin-desc').value = holiday.desc || '';
+      } else {
+        document.getElementById('inline-admin-type').value = 'GH';
+        document.getElementById('inline-admin-name').value = '';
+        document.getElementById('inline-admin-desc').value = '';
+      }
+    } else {
+      if (inlineAdmin) inlineAdmin.classList.add('hidden');
     }
 
     // Notes
