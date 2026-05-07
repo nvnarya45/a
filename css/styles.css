@@ -1,7 +1,8 @@
 :root{--bg:#0a0a1a;--glass:rgba(255,255,255,.06);--glass-border:rgba(255,255,255,.1);--glass-strong:rgba(255,255,255,.12);--text:#f0f0f5;--text-sec:#a0a0b8;--accent:#6c5ce7;--accent2:#a855f7;--gh:#ef4444;--rh:#3b82f6;--weekend:#f97316;--today-glow:#ec4899;--radius:16px;--blur:20px;--transition:.3s cubic-bezier(.4,0,.2,1)}
 [data-theme="light"]{--bg:#e8e8f0;--glass:rgba(255,255,255,.55);--glass-border:rgba(255,255,255,.6);--glass-strong:rgba(255,255,255,.7);--text:#1a1a2e;--text-sec:#555}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background var(--transition),color var(--transition)}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background var(--transition),color var(--transition);-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;user-select:none}
+input,textarea{user-select:auto}
 .bg-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:float 15s ease-in-out infinite}
 .orb-1{width:300px;height:300px;background:#6c5ce7;top:-50px;left:-50px;animation-delay:0s}
 .orb-2{width:250px;height:250px;background:#ec4899;bottom:10%;right:-30px;animation-delay:-5s}
