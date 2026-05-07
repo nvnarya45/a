@@ -68,7 +68,7 @@ input,textarea{user-select:auto}
 .glass-select-sm{padding:6px 10px;font-size:.85rem}
 
 /* Calendar Grid */
-.calendar-wrapper{width:100%;max-width:600px;overflow:hidden;position:relative}
+.calendar-wrapper{width:100%;max-width:600px;overflow:hidden;position:relative;flex:1;display:flex;flex-direction:column}
 
 /* Swipe Animations */
 @keyframes slideOutLeft{from{transform:translateX(0);opacity:1}to{transform:translateX(-100%);opacity:0}}
@@ -82,7 +82,7 @@ input,textarea{user-select:auto}
 .day-headers{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
 .day-headers .day-h{text-align:center;font-size:.75rem;font-weight:700;color:var(--text-sec);padding:6px 0;text-transform:uppercase}
 .day-headers .day-h.weekend-h{color:var(--weekend)}
-.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;flex:1;grid-auto-rows:1fr}
 .cal-cell{position:relative;min-height:60px;border-radius:12px;padding:6px;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);background:var(--glass);border:1px solid transparent;display:flex;flex-direction:column;align-items:center;overflow:hidden}
 .cal-cell:hover{transform:scale(1.06);z-index:2;border-color:var(--glass-border);box-shadow:0 4px 20px rgba(0,0,0,.2)}
 .cal-cell .day-num{font-size:1rem;font-weight:700;line-height:1}
@@ -225,11 +225,6 @@ input,textarea{user-select:auto}
 /* Admin */
 .admin-form{display:flex;flex-direction:column;gap:10px}
 .admin-holiday-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
-
-/* Footer */
-.app-footer{width:100%;max-width:600px;text-align:center;margin-top:20px;padding:14px}
-.app-footer p{font-size:.8rem;color:var(--text-sec)}
-.footer-link{background:none;border:none;color:var(--accent);cursor:pointer;font-weight:600;font-size:.8rem}
 
 /* Toast */
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--glass-strong);backdrop-filter:blur(20px);border:1px solid var(--glass-border);padding:12px 24px;border-radius:14px;font-weight:600;font-size:.9rem;z-index:500;animation:toastIn .3s ease}
